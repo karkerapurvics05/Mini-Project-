@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard · Purvi Beauty Parlour{% endblock %}
+{% block content %}
+{% set info = parlour_info if (parlour_info is defined and parlour_info) else {
+  'owner': 'Radha Karkera',
+  'address': 'Shop No. 2, Opp. Bank of Baroda,\nVile Parle East, Mumbai – 400099',
+  'timings': 'Tue–Sun · 10:00 AM – 8:00 PM\nMonday · Closed',
+  'phone': '+91 96194 90112'
+} %}
+<section class="admin-page">
+    <div class="admin-title">
+        <div>
+            <p class="eyebrow">MANAGEMENT PORTAL</p>
+            <h1>Admin <em>Dashboard</em></h1>
+            <p>Manage parlour services, review client feedback, and track performance ratings.</p>
+        </div>
+        <form method="post" action="/admin/logout">
+            <button class="button button-outline" type="submit">Log out</button>
+        </form>
+    </div>
+
+    {% if not db_connected %}
+    <div class="flash error">Database is currently offline. Check MongoDB connection settings.</div>
+    {% endif %}
+
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+        <article>
+            <small>Total Feedback</small>
+            <strong>{{ reviews|length }}</strong>
+        </article>
+        <article>
+            <small>Overall Rating</small>
+            <strong>{{ overall }} <span>/ 5</span></strong>
+        </article>
+        <article>
+            <small>Client Satisfaction</small>
+            <strong>{{ satisfaction_rate if satisfaction_rate is defined else 100 }}% <span>Happy</span></strong>
+        </article>
+        <article>
+            <small>Top Rated Service</small>
+            <strong class="stat-word">{{ most }}</strong>
+        </article>
+        <article>
+            <small>Needs Attention</small>
+            <strong class="stat-word">{{ least }}</strong>
+        </article>
+    </div>
+
+    <div class="admin-grid">
+        <section class="panel">
+            <h2>Rating Distribution</h2>
+            <div class="bar-chart">
+                {% for rating, count in distribution.items() %}
+                <div class="bar-row">
+                    <span>{{ rating }} / 5</span>
+                    <div class="bar-track">
+                        <div class="bar-fill" data-width="{{ (count / (reviews|length) * 100) if reviews|length else 0 }}%"></div>
+                    </div>
+                    <b>{{ count }}</b>
+                </div>
+                {% endfor %}
+            </div>
+
+            <h2>Service Performance</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Reviews</th>
+                            <th>Average Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in stats %}
+                        <tr>
+                            <td>{{ s.name }}</td>
+                            <td>{{ s.count }}</td>
+                            <td>{{ s.average }} / 5</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Add New Service</h2>
+            <form method="post" action="/admin/services" class="stack-form">
+                <label>Service Name
+                    <input name="name" required maxlength="100" placeholder="e.g. Hair Spa">
+                </label>
+                <label>Description
+                    <input name="description" maxlength="300" placeholder="Brief treatment details">
+                </label>
+                <label>Price (₹)
+                    <input name="price" type="number" min="0" step="1" required placeholder="e.g. 799">
+                </label>
+                <button class="button" type="submit">Add Service</button>
+            </form>
+        </section>
+    </div>
+
+    <div class="admin-grid">
+        <section class="panel">
+            <h2>Manage Timings & Website Information</h2>
+            <form method="post" action="/admin/info" class="stack-form">
+                <label>Parlour Owner Name
+                    <input name="owner" value="{{ info.owner }}" required maxlength="100">
+                </label>
+                <label>Working Hours & Timings
+                    <input name="timings" value="{{ info.timings }}" required maxlength="200">
+                </label>
+                <label>Full Address
+                    <input name="address" value="{{ info.address }}" required maxlength="300">
+                </label>
+                <label>Contact Phone Number
+                    <input name="phone" value="{{ info.phone }}" required maxlength="50">
+                </label>
+                <button class="button" type="submit">Save Parlour Details</button>
+            </form>
+        </section>
+
+        <section class="panel">
+            <h2>Change Admin Password</h2>
+            <form method="post" action="/admin/password" class="stack-form">
+                <label>Current Password
+                    <input type="password" name="current_password" required placeholder="Enter current password">
+                </label>
+                <label>New Password
+                    <input type="password" name="new_password" required minlength="4" placeholder="Enter new password">
+                </label>
+                <button class="button" type="submit">Update Password</button>
+            </form>
+        </section>
+    </div>
+
+    <section class="panel">
+        <h2>Manage Services & Prices</h2>
+        {% for s in services %}
+        <div class="manage-service">
+            <form method="post" action="/admin/services/update" class="service-edit">
+                <input type="hidden" name="old_name" value="{{ s.name }}">
+                <label>Name
+                    <input name="name" value="{{ s.name }}" required>
+                </label>
+                <label>Description
+                    <input name="description" value="{{ s.description }}" maxlength="300">
+                </label>
+                <label>Price ₹
+                    <input name="price" type="number" min="0" step="1" value="{{ s.price }}" required>
+                </label>
+                <button class="button small-button" type="submit">Save</button>
+            </form>
+            <form method="post" action="/admin/services/delete" onsubmit="return confirm('Delete this service? Existing reviews will be retained.');">
+                <input type="hidden" name="name" value="{{ s.name }}">
+                <button class="delete-button" type="submit">Delete</button>
+            </form>
+        </div>
+        {% endfor %}
+    </section>
+
+    <section class="panel">
+        <h2>Client Reviews</h2>
+        {% if reviews %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Service</th>
+                        <th>Rating</th>
+                        <th>Review</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in reviews %}
+                    <tr>
+                        <td>{{ r.name }}</td>
+                        <td>{{ r.service }}</td>
+                        <td>{{ r.rating }} / 5</td>
+                        <td>{{ r.message }}</td>
+                        <td>{{ r.created_at[:10] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p>No client reviews recorded yet.</p>
+        {% endif %}
+    </section>
+</section>
+<script>
+    document.querySelectorAll('.bar-fill[data-width]').forEach(function(el) {
+        el.style.width = el.getAttribute('data-width');
+    });
+</script>
+{% endblock %}

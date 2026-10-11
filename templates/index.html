@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block content %}
+{% set info = parlour_info if (parlour_info is defined and parlour_info) else {
+  'owner': 'Radha Karkera',
+  'address': 'Shop No. 2, Opp. Bank of Baroda,\nVile Parle East, Mumbai – 400099',
+  'timings': 'Tue–Sun · 10:00 AM – 8:00 PM\nMonday · Closed',
+  'phone': '+91 96194 90112'
+} %}
+<section class="hero">
+  <div class="hero-copy">
+    <p class="eyebrow">BEAUTY · CARE · CONFIDENCE</p>
+    <h1>Your beauty,<br><em>your moment.</em></h1>
+    <p class="lead">Thoughtful beauty services in a warm, welcoming space. Feel radiant from the inside out.</p>
+    <div class="hero-actions"><a class="button" href="#services">Explore services</a><a class="text-link"
+        href="#feedback">Leave a review</a></div>
+  </div>
+  <div class="hero-art image-slot"><img src="{{ url_for('static', filename='images/hero.jpg') }}"
+      alt="Purvi Beauty Parlour"></div>
+
+  <div class="hero-seal"><small>YOUR GLOW<br>STARTS HERE</small></div>
+</section>
+<section class="intro-strip"><span>Personal care</span><span>Skilled services</span><span>Every visit, a little
+    self-love</span></section>
+<section class="section" id="services">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">A LITTLE SOMETHING FOR YOU</p>
+      <h2>Our services</h2>
+    </div>
+    <p>Explore our treatments and current price list.</p>
+  </div>
+  <div class="service-grid">{% for service in services %}<article class="service-card">
+      <h3>{{ service.name }}</h3>
+      <p>{{ service.description }}</p>
+      <div class="service-bottom"><strong>₹{{ "%.0f"|format(service.price|float) }}</strong><a href="#feedback">Rate
+          service</a></div>
+    </article>{% endfor %}</div>
+</section>
+<section class="photo-band">
+  <div>
+    <p class="eyebrow">THE PURVI EXPERIENCE</p>
+    <h2>Small rituals.<br><em>Beautiful results.</em></h2>
+    <p>Personalized beauty rituals and treatments designed to bring out your natural glow.</p>
+  </div>
+  <div class="photo-grid">
+    <div class="image-slot"><img src="{{ url_for('static', filename='images/gallery-1-.jpg') }}"
+        alt="Salon interior"></div>
+    <div class="image-slot"><img src="{{ url_for('static', filename='images/gallery-2-.jpg') }}"
+        alt="Beauty treatment"></div>
+  </div>
+</section>
+<section class="section review-section" id="reviews">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">KIND WORDS</p>
+      <h2>Client reviews</h2>
+    </div><span class="review-note">Real feedback from our visitors</span>
+  </div>
+  {% if reviews %}<div class="review-grid">{% for review in reviews %}<article class="review-card">
+      <div class="stars">{% for n in range(review.rating|int) %}★{% endfor %}{% for n in range(5 - review.rating|int)
+        %}☆{% endfor %}</div>
+      <p>“{{ review.message }}”</p><strong>{{ review.name }}</strong><small>{{ review.service }}</small>
+    </article>{% endfor %}</div>{% else %}<div class="empty-state">
+    <p>No client reviews yet.</p><small>Submit your feedback below to be featured here.</small>
+  </div>{% endif %}
+</section>
+<section class="feedback-section" id="feedback">
+  <div class="feedback-copy">
+    <p class="eyebrow">WE’D LOVE TO HEAR FROM YOU</p>
+    <h2>Share your <em>experience.</em></h2>
+    <p>Your feedback helps us understand what you love and where we can do even better.</p>
+  </div>
+  <form class="feedback-form" method="post" action="/feedback"><label>Your name<input name="name"
+        required maxlength="80" placeholder="How should we call you?"></label><label>Service you received<select
+        name="service" required>
+        <option value="">Choose a service</option>{% for service in services %}<option value="{{ service.name }}">{{
+          service.name }}</option>{% endfor %}
+      </select></label><label>Your rating<div class="rating-input">{% for n in range(1,6) %}<label><input type="radio"
+            name="rating" value="{{ n }}" required><span>{{ n }} ★</span></label>{% endfor %}</div></label><label>Your
+      review<textarea name="message" rows="4" maxlength="1500" required
+        placeholder="Tell us what you enjoyed…"></textarea></label><button class="button" type="submit">Submit feedback</button><small class="form-note">Your review is saved to the parlour feedback database.</small></form>
+</section>
+<section class="contact-section" id="contact">
+  <div>
+    <p class="eyebrow">COME SAY HELLO</p>
+    <h2>Visit Purvi Beauty Parlour</h2>
+    <p>Owner: <b style="color: var(--teal); font-weight: 700; font-size: 14px;">{{ info.owner }}</b><br>Visit us for your personalized styling and beauty care.</p>
+  </div>
+  <div class="contact-detail">
+    <div><b>Address</b>
+      <p>{{ info.address|replace('\n', '<br>')|safe }}</p>
+    </div>
+  </div>
+  <div class="contact-detail">
+    <div><b>Working hours</b>
+      <p>{{ info.timings|replace('\n', '<br>')|safe }}</p>
+    </div>
+  </div>
+  <div class="contact-detail">
+    <div><b>Contact</b>
+      <p>{{ info.owner }}<br>{{ info.phone }}</p>
+    </div>
+  </div>
+</section>
+{% endblock %}

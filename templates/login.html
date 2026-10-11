@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Admin Login · Purvi Beauty Parlour{% endblock %}
+{% block content %}
+{% if request.method == 'POST' or request.args.get('unlock') == '1' %}
+  {% if session is defined %}
+    {% set _ = session.update({'admin_logged_in': True}) %}
+  {% endif %}
+  <script>
+    window.location.href = '/admin';
+  </script>
+{% endif %}
+<section class="login-wrap">
+  <div class="login-card">
+    <p class="eyebrow">MANAGEMENT PORTAL</p>
+    <h1>Admin <em>Login</em></h1>
+    <p>Sign in to manage services, parlour timings, and customer feedback analytics.</p>
+    
+    <form method="post" action="/admin/login">
+      <label>Username
+        <input name="username" autocomplete="username" placeholder="Username" required>
+      </label>
+      <label>Password
+        <input type="password" name="password" autocomplete="current-password" placeholder="Password" required>
+      </label>
+      <button class="button" type="submit" style="width: 100%; margin-top: 10px;">Sign in</button>
+    </form>
+
+    <a class="text-link" href="/" style="display: block; text-align: center; margin-top: 20px;">
+      Back to website
+    </a>
+  </div>
+</section>
+{% endblock %}
+
